@@ -8,11 +8,76 @@
 #define Prob_min 10		//확률 최솟값 저장
 #define Prob_max 90		//확률 최대값 저장
 
-int main() {
+//열차 만드는 함수 : 기차길이, 시민위치, 마동석 위치, 좀비 위치
+void trMake(int, int, int, int);
+void trMake(int tr_length, int C, int Z, int M) {
+	for (int i = 0; i < tr_length; i++) {
+		printf("#");
+	}
+	printf("\n");
+	for (int i = 0; i < tr_length; i++) {
+		if (i == 0 || i == tr_length - 1)
+			printf("#");
+		else if (i == C)
+			printf("C");
+		else if (i == M)
+			printf("M");
+		else if (i == Z)
+			printf("Z");
+		else
+			printf(" ");
+	}
+	printf("\n");
+	for (int i = 0; i < tr_length; i++) {
+		printf("#");
+	}
+	printf("\n");
+}
+//시민 움직이기 함수 : 시민위치, 확률
+int cMove(int, int);
+int cMove(int percent, int C) {
+	int Rd = rand() % 100;
+	if (Rd < (100 - percent))
+		return C -= 1;
+	else
+		return C;
+}
+//좀비 움직이기 함수 : 좀비위치, 확률
+int zMove(int, int);
+int zMove(int percent, int Z) {
+	int Rd2 = rand() % 100;
+	if (Rd2 < percent)
+		return Z -= 1;
+	else
+		return Z;
+}
+//시민 이동 현황 출력 함수 : 시민의 현재위치, 시민의 이전위치
+void cSpot(int, int);
+void cSpot(int C, int befoC) {
+	if (befoC != C) {
+		printf("citizen: %d -> %d\n", befoC, C);
+	}
+	else
+		printf("citizen: stay %d\n", befoC);
+}
+//좀비 이동 현황 출력 함수 : 좀비의 현재위치, 좀비의 이전위치, 좀비의 턴 수
+void zSpot(int, int, int);
+void zSpot(int Z, int befoZ, int turnZ) {
+	if (turnZ % 2 == 0) {
+		printf("zombie: stay %d (cannot move)\n", befoZ);
+	}
+	else if (befoZ != Z) {
+		printf("zombie: %d -> %d\n", befoZ, Z);
+	}
+	else {
+		printf("zombie: stay %d\n", befoZ);
+	}
+}
 
+int main() {
 	srand((unsigned int)time(NULL));		//난수 배열을 초기화 하기 위함
 
-	// 1. 인트로
+	//1. 인트로
 	printf(" ______                   _      _         _____               _        \n");
 	Sleep(200);
 	printf("|___  /                  | |    (_)       |_   _|             (_)       \n");
@@ -30,13 +95,10 @@ int main() {
 	printf("			     게임을 시작합니다.\n\n");
 
 	Sleep(1000);
-
 	//인트로 끝
 
-
 	// 2. 부산헹 초기 열차 설정하기
-
-	int tr_length;		//열차 길이 변수 지정 및 입력
+	int tr_length;
 	printf("열차의 길이를 입력해주세요(%d~%d)>>: ", Len_min, Len_max);
 	scanf_s("%d", &tr_length);
 	printf("\n");
@@ -54,122 +116,44 @@ int main() {
 			printf("잘못된 확률 입력입니다.");
 		}
 		else {
+			// 3. 확률에 따른 시민과 좀비 이동
 
-			int C, M, Z;		//시민, 좀비, 마동석 변수 지정 후 열차 길이에 따른 초기 위치 설정
+			int C, Z, M;	//시민, 좀비, 마동석 변수 지정 후 열차 길이에 따른 초기 위치 설정
 			C = tr_length - 6;
-			M = tr_length - 2;
 			Z = tr_length - 3;
+			M = tr_length - 2;
 
+			trMake(tr_length, C, Z, M);	//부산헹 초기 열차 설정 끝
 
-			for (int i = 0; i < tr_length; i++) {		// 열차 1번째 행
-				printf("#");
-			}
-			printf("\n");
+			int befoC, befoZ, turnZ;		//시민, 좀비의 움직이기 직전 값 및 좀비의 턴 횟수를 저장하기 위한 변수 설정
+			befoC = C;
+			befoZ = Z;
+			turnZ = 1;				//홀수턴은 실행이기 때문에 초깃값을 1로 설정
 
-			for (int i = 0; i < tr_length; i++) {		//기차 2번째 행
-				if (i == 0 || i == tr_length - 1)
-					printf("#");	//기차 첫번째와 마지막 부분은 #으로 막아줌
+			while (C != 1 && Z != C + 1) { //무한반복 코드
+				C = cMove(percent, C);
 
-				else if (i == C)
-					printf("C");	//시민 위치는 C로 표시
+				if ((turnZ % 2) != 0)	//나머지가 0이 아니면 홀수턴임으로 난수 추출 실행
+					Z = zMove(percent, Z);
 
-				else if (i == M)
-					printf("M");	//마동석 위치는 M으로 표시
+				trMake(tr_length, C, Z, M);
 
-				else if (i == Z)
-					printf("Z");	//좀비 위치는 Z로 표시
+				cSpot(C, befoC);
 
-				else
-					printf(" ");	//그 외는 빈칸으로 표시
-			}
-			printf("\n");
+				zSpot(Z, befoZ, turnZ);
 
+				if (befoC != C)
+					befoC = C;
+				if (befoZ != Z)
+					befoZ = Z;
 
-			for (int i = 0; i < tr_length; i++) {		//기차 3번째 행
-				printf("#");
-			}
-			printf("\n\n");
-			//부산헹 초기 열차 설정 끝
-
-
-					// 3. 확률에 따른 시민과 좀비 이동
-			int CS, ZS, ZT;		//시민, 좀비의 움직이기 직전 값 및 좀비의 턴 횟수를 저장하기 위한 변수 설정
-			CS = C;
-			ZS = Z;
-			ZT = 1;				//홀수턴은 실행이기 때문에 초깃값을 1로 설정
-
-			while (1) { //무한반복 코드
-				int Rd = rand() % 100;				//0~99 사이의 수 중 한개의 난수 추출
-
-				if (Rd < (100 - percent)) 			//입력한 확률보다 난수가 낮으면 시민 이동
-					C -= 1;
-
-				if ((ZT % 2) != 0) {				//나머지가 0이 아니면 홀수턴임으로 난수 추출 실행
-
-					int Rd2 = rand() % 100;			//0~99 사이의 수 중 한개의 난수 추출
-
-					if (Rd2 < percent) 				//입력한 확률보다 난수가 낮으면 좀비 이동
-						Z -= 1;
-				}
-
-				for (int i = 0; i < tr_length; i++) {
-					printf("#");
-				}
-				printf("\n");
-
-				for (int i = 0; i < tr_length; i++) {
-					if (i == 0 || i == tr_length - 1)
-						printf("#");
-
-					else if (i == C)
-						printf("C");
-
-					else if (i == M)
-						printf("M");
-
-					else if (i == Z)
-						printf("Z");
-
-					else
-						printf(" ");
-				}
-				printf("\n");
-
-				for (int i = 0; i < tr_length; i++) {
-					printf("#");
-				}
-				printf("\n\n");
-
-				if (CS != C) {		//시민이 이동했을때 실행
-					printf("citizen: %d -> %d\n", CS, C);
-					CS = C;			//시민이 움직이기 직전 값을 현재 위치로 재설정
-				}
-				else {
-					printf("citizen: stay %d\n", CS);		//시민이 제자리일 때 실행
-				}
-				if (ZT % 2 == 0) {		//좀비턴이 짝수일때 실행
-					printf("zombie: stay %d (cannot move)\n", ZS);		//짝수턴에는 좀비가 움직이지 않음
-				}
-				else if (ZS != Z) {		//좀비가 이동했을때 실행
-					printf("zombie: %d -> %d\n", ZS, Z);
-					ZS = Z;
-				}
-				else {			//좀비가 제자리일 때 실행
-					printf("zombie: stay %d\n", ZS);
-				}
-
-				ZT += 1;		//좀비턴 횟수 증가
+				turnZ += 1;		//좀비턴 횟수 증가
 				printf("\n");
 				Sleep(4000);
-
-				if (C == 1 || Z == C + 1)		//시민 탈출하거나 좀비에게 잡혔을때 실행
-					break;						//반복 멈추기
 			}
-			//시민, 좀비 이동 및 반복 끝
-
 
 			// 4. 아웃트로
-			if (C == 1) {		//시민이 탈출했을 때의 아웃트로
+			if (C == 1) {
 				printf("     탈출성공!!\n");
 				printf("  ___        _  _   \n");
 				printf(" / __|      (_)| |  \n");
@@ -178,7 +162,7 @@ int main() {
 				printf("| |__  >  < | || |_ \n");
 				printf("|____|/_/|_||_||___|\n");
 			}
-			else {			//탈출 실패했을 때의 아웃트로
+			else {
 				printf("                탈출실패..\n");
 				printf(",_   __                _____  _       \n");
 				printf("| | / /               |  _  |(_)      \n");
@@ -186,9 +170,7 @@ int main() {
 				printf("  | /   / _ | | | | | | | | || | / _ |\n");
 				printf("  | |  | (_) || |_| | | |/ / | ||  __/\n");
 				printf("  |_/   |___/  |__,_| |___/  |_| |___|\n");
-
 			}
-			//아웃트로 끝
 		}
 	}
 	return 0;
