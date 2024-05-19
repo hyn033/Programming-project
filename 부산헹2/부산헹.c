@@ -12,7 +12,7 @@
 #define Move_stay 0		//마동석 이동 방향
 #define Move_left 1
 #define Action_rest 0	//마동석 행동
-#define Action_proboke 1
+#define Action_provoke 1
 #define Action_pull 2
 #define Aggro_min 0		//어그로 범위
 #define Aggro_max 5
@@ -242,6 +242,7 @@ void mSpot(int M, int befoM, int aggroM, int befo_aggroM, int ma_stamina){
 		else
 			printf("madongseok: stay %d (aggro : %d -> %d, stamina: %d)\n", befoM, befo_aggroM, aggroM,ma_stamina);
 	}
+	printf("\n");
 }
 //시민 현재상황
 void cCondition(void);
@@ -272,20 +273,59 @@ void noAttack(void) {
 	printf("zombie attcked nobody.\n");
 }
 //좀비가 시민을 공격하는 상황
-void cAttack(int, int, int, int, int);
-void cAttack(int C, int M, int Z, int aggroC, int aggroM) {
+int cAttack(int, int, int, int, int);
+int cAttack(int C, int M, int Z, int aggroC, int aggroM) {
 	if (Z == (C + 1) && Z == (M - 1))
 		printf("Zombie attacked citizen (aggro: %d vs. %d, citizen dead)\n", aggroC, aggroM);
 	else
 		printf("Zombie attacked citizen \n");
+	return 1;
 }
 //좀비가 마동석을 공격하는 상황
-void mAttack(int, int, int,int,int,int,int);
-void mAttack(int C, int M, int Z, int aggroC, int aggroM, int ma_stamina, int befo_ma_stamina) {
+int mAttack(int, int, int,int,int,int,int);
+int mAttack(int C, int M, int Z, int aggroC, int aggroM, int ma_stamina, int befo_ma_stamina) {
+	ma_stamina -=1;
 	if (Z == (C + 1) && Z == (M - 1))
-		printf("Zombie attacked madongseok (aggro: %d vs. %d, madongseok stamina: %d -> %d)\n", aggroC, aggroM, ma_stamina, befo_ma_stamina);
+		printf("Zombie attacked madongseok (aggro: %d vs. %d, madongseok stamina: %d -> %d)\n", aggroC, aggroM, befo_ma_stamina, ma_stamina);
 	else
-		printf("Zombie attacked madongseok\n");
+		printf("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n", befo_ma_stamina, ma_stamina);
+	return ma_stamina;
+}
+//마동석 행동 : 좀비위치, 마동석위치
+int mAction(int, int);
+int mAction(int Z, int M) {
+	int x;
+	if (Z == (M - 1)) {
+		printf("madongseok action(%d.rest, %d.provoke, %d.pull)>> ", Action_rest, Action_provoke, Action_pull);
+		scanf_s("%d", &x);
+		printf("\n");
+		if (x == Action_rest)
+			return Action_rest;
+		else if (x == Action_pull)
+			return Action_pull;
+		else
+			return Action_provoke;
+	}
+	else {
+		printf("madongseok action(%d.rest, %d.provoke)>> ", Action_rest, Action_provoke);
+		scanf_s("%d", &x);
+		printf("\n");
+		if (x == Action_rest)
+			return Action_rest;
+		else
+			return Action_provoke;
+	}
+}
+//마동석이 쉬는 상황 : 마동석 위치, 마동석 어그로, 마동석 체력
+void mRest(int, int, int,int,int);
+void mRest(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
+	printf("madongseok rests...\n");
+	if(befo_aggroM==Aggro_min)
+		printf("madongseok: %d (aggro : %d, stamina : %d -> %d)\n", M, aggroM, ma_stamina, befo_ma_stamina);
+	else if(befo_ma_stamina==Stm_max)
+		printf("madongseok: %d (aggro : %d -> %d, stamina : %d)\n", M, befo_aggroM, aggroM, ma_stamina);
+	else
+		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, ma_stamina, befo_ma_stamina);
 }
 
 int main() {
@@ -328,8 +368,9 @@ int main() {
 	aggroM = 0;
 	befo_aggroM = 0;
 
-	int actionZ;
+	int actionZ, actionM;
 
+	int Cdead = 0;
 
 	while (C != 1 && Z != C + 1) { //무한반복 코드
 		printf("\n\n");
@@ -367,8 +408,16 @@ int main() {
 
 		switch (actionZ) {
 			case Atk_none: noAttack(); break;
-			case Atk_citizen: cAttack(C, M, Z, aggroC, aggroM); break;
-			case Atk_dongseok: mAttack(C, M, Z, aggroC, aggroM,ma_stamina,befo_ma_stamina); break;
+			case Atk_citizen: Cdead = cAttack(C, M, Z, aggroC, aggroM); break;
+			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM,ma_stamina, befo_ma_stamina); break;
+		}
+
+		actionM = mAction(Z, M);
+
+		if (actionM == Action_rest) { //마동석 행동 rest 구현
+			mRest(M, befo_aggroM, aggroM, ma_stamina, befo_ma_stamina);
+			aggroM = befo_aggroM;
+			ma_stamina = befo_ma_stamina;
 		}
 	
 
