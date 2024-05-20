@@ -105,6 +105,7 @@ int maTrue(void){
 //열차 만드는 함수 : 기차길이, 시민위치, 마동석 위치, 좀비 위치
 void trMake(int, int, int, int);
 void trMake(int tr_length, int C, int Z, int M) {
+	printf("\n\n");
 	for (int i = 0; i < tr_length; i++) {
 		printf("#");
 	}
@@ -145,13 +146,14 @@ int zMove(int percent, int Z, int aggroC, int aggroM, int C, int M) {
 			if (Z != (C + 1))
 				return Z -= 1;
 		}
-		else if (Z != (M + 1))
+		else if (Z != (M - 1))
 			return Z += 1;
 		else
 			return Z;
 	}
 	else
 		return Z;
+	return Z;
 }
 //시민 이동 현황 출력 함수 : 시민의 현재위치, 시민의 이전위치, 어그로 값
 void cSpot(int, int, int, int);
@@ -227,7 +229,7 @@ int mMove(int Z, int M) {
 					M -= 1;
 					return M;
 				}
-				else
+				else if(x==Move_stay)
 					return M;
 			}
 		}	
@@ -301,39 +303,75 @@ int mAttack(int C, int M, int Z, int aggroC, int aggroM, int ma_stamina, int bef
 int mAction(int, int);
 int mAction(int Z, int M) {
 	int x;
-	if (Z == (M - 1)) {
-		printf("madongseok action(%d.rest, %d.provoke, %d.pull)>> ", Action_rest, Action_provoke, Action_pull);
-		scanf_s("%d", &x);
-		printf("\n");
-		if (x == Action_rest)
-			return Action_rest;
-		else if (x == Action_pull)
-			return Action_pull;
-		else
-			return Action_provoke;
-	}
-	else {
-		printf("madongseok action(%d.rest, %d.provoke)>> ", Action_rest, Action_provoke);
-		scanf_s("%d", &x);
-		printf("\n");
-		if (x == Action_rest)
-			return Action_rest;
-		else
-			return Action_provoke;
+	while (1) {
+		if (Z == (M - 1)) {
+			printf("madongseok action(%d.rest, %d.provoke, %d.pull)>> ", Action_rest, Action_provoke, Action_pull);
+			scanf_s("%d", &x);
+			printf("\n");
+			if (x == Action_rest)
+				return Action_rest;
+			else if (x == Action_pull)
+				return Action_pull;
+			else if(x == Action_provoke)
+				return Action_provoke;
+		}
+		else {
+			printf("madongseok action(%d.rest, %d.provoke)>> ", Action_rest, Action_provoke);
+			scanf_s("%d", &x);
+			printf("\n");
+			if (x == Action_rest)
+				return Action_rest;
+			else if(x== Action_provoke)
+				return Action_provoke;
+		}
 	}
 }
-//마동석이 쉬는 상황 : 마동석 위치, 마동석 어그로, 마동석 체력
+//마동석 체력 1 증가 함수
+int addStm(int);
+int addStm(int ma_stamina) {
+	if (ma_stamina != Stm_max)
+		return ma_stamina += 1;
+	else
+		return ma_stamina =Stm_max;
+}
+//마동석 체력 1 감소 함수
+int minusStm(int);
+int minusStm(int ma_stamina) {
+	if (ma_stamina != Stm_min)
+		return ma_stamina -= 1;
+	else
+		return ma_stamina = Stm_min;
+}
+//마동석 어그로 1 감소 함수
+int minus_one_AggroM(int);
+int minus_one_AggroM(int aggroM) {
+	if (aggroM != Aggro_min)
+		return aggroM -= 1;
+	else
+		return aggroM = Aggro_min;
+}
+//마동석 어그로 2 증가 함수
+int add_two_AggroM(int);
+int add_two_AggroM(int aggroM) {
+	if ((aggroM+2)<=Aggro_max)
+		return aggroM += 2;
+	else
+		return aggroM = Aggro_max;
+}
+//마동석 rest 상황 : 마동석 위치, 마동석 어그로, 마동석 체력
 void mRest(int, int, int,int,int);
 void mRest(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
 	printf("madongseok rests...\n");
-	if(befo_aggroM==aggroM)
+	if(befo_aggroM==aggroM && befo_ma_stamina == ma_stamina)
+		printf("madongseok: %d (aggro : %d, stamina : %d)\n", M, aggroM, ma_stamina);
+	else if (befo_aggroM == aggroM)
 		printf("madongseok: %d (aggro : %d, stamina : %d -> %d)\n", M, aggroM, befo_ma_stamina, ma_stamina);
-	else if(befo_ma_stamina==ma_stamina)
+	else if(befo_ma_stamina == ma_stamina)
 		printf("madongseok: %d (aggro : %d -> %d, stamina : %d)\n", M, befo_aggroM, aggroM, ma_stamina);
 	else
 		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, befo_ma_stamina, ma_stamina);
 }
-//마동석이 도발하는 상황 : 마동석 위치, 마동석 어그로. 마동석 체력
+//마동석 provoke 상황 : 마동석 위치, 마동석 어그로. 마동석 체력
 void mProvoke(int,int,int,int,int);
 void mProvoke(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
 	printf("madongseok provoked zombie...\n");
@@ -342,35 +380,52 @@ void mProvoke(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_st
 	else
 		printf("madongseok: %d (aggro : %d -> %d, stamina : %d)\n", M, befo_aggroM, aggroM, ma_stamina);
 }
+//마동석 pull 확률 : 퍼센트 
+int mPull(int);
+int mPull(int percent) {
+	int x = rand() % 100;
+	if (x < (100 - percent))
+		return 1;
+	else
+		return 0;
+}
+//마동석이 붙들기 성공한 상황: 
+void success_mPull(int, int, int, int, int);
+void success_mPull(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
+	printf("madongseok pulled zombie... Next turn, it can't move\n");
+	if (befo_aggroM == aggroM)
+		printf("madongseok: %d (aggro : %d, stamina : %d)\n", M, aggroM, ma_stamina);
+	else
+		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, befo_ma_stamina,ma_stamina);
+}
+//마동석이 붙들기 실패한 상황: 
+void fail_mPull(int, int, int, int, int);
+void fail_mPull(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
+	printf("madongseok failed to pull zombie\n");
+	if (befo_aggroM == aggroM)
+		printf("madongseok: %d (aggro : %d, stamina : %d -> %d)\n", M, aggroM, befo_ma_stamina, ma_stamina);
+	else
+		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, befo_ma_stamina, ma_stamina);
+}
 
 int main() {
 	srand((unsigned int)time(NULL));		//난수 배열을 초기화 하기 위함
-
-	//1. 인트로
+	//인트로
 	intro();
 
-	// 2. 부산헹 초기 설정
-	int tr_length;
-	tr_length = trTrue();
+	//부산헹 초기 설정
+	int tr_length = trTrue();
+	int ma_stamina = maTrue();
+	int percent = perTrue();
 
-	int ma_stamina;
-	ma_stamina = maTrue();
-
-	int percent;
-	percent = perTrue();
-
-	// 3. 확률에 따른 시민과 좀비 이동
-
-	int C, Z, M;	//시민, 좀비, 마동석 변수 지정 후 열차 길이에 따른 초기 위치 설정
+	int C, Z, M;	
 	C = tr_length - 6;
 	Z = tr_length - 3;
 	M = tr_length - 2;
 
-	printf("\n\n");
-
 	trMake(tr_length, C, Z, M);
 
-	int befoC, befoZ, befoM, befo_ma_stamina, turnZ;	//시민, 좀비, 마동석의 움직이기 직전 값 및 좀비의 턴 횟수를 저장하기 위한 변수 설정
+	int befoC, befoZ, befoM, befo_ma_stamina, turnZ;
 	befoC = C;
 	befoZ = Z;
 	befoM = M;
@@ -384,39 +439,36 @@ int main() {
 	befo_aggroM = 0;
 
 	int actionZ, actionM;
-
 	int Cdead = 0;
+	int pull_percent;
 
-	while (C != 1 && Z != C + 1) { //무한반복 코드
-		printf("\n\n");
-
+	//무한반복 코드
+	while (C != 1 && Cdead!=1 && ma_stamina!= 0) { 
+		//시민, 좀비 이동
 		C = cMove(percent, C);
-
 		aggroC = cAggro(C, befoC, aggroC);
 
 		if ((turnZ % 2) != 0) {
 				Z = zMove(percent, Z, aggroC, aggroM, C, M);
 		}
-
-
 		trMake(tr_length, C, Z, M);
 
 		cSpot(C, befoC,befo_aggroC,aggroC);
-
-		zSpot(Z, befoZ, turnZ);
-
+		zSpot(Z, befoZ, turnZ); 
 		printf("\n");
+		if (C == 1)
+			break;
 
+		//마동석 이동
 		M = mMove(Z, M);
-
 		aggroM = mAggro(M, befoM, aggroM);
 
 		trMake(tr_length, C, Z, M);
 
 		mSpot(M, befoM, aggroM, befo_aggroM, ma_stamina);
 
+		//시민상태, 좀비행동
 		cCondition();
-
 		actionZ = zAction(C, M, Z, aggroC, aggroM);
 
 		switch (actionZ) {
@@ -424,33 +476,46 @@ int main() {
 			case Atk_citizen: Cdead = cAttack(C, M, Z, aggroC, aggroM); break;
 			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM,ma_stamina, befo_ma_stamina); break;
 		}
+		if (ma_stamina == 0 || Cdead == 1)
+			break;
 
 		befo_aggroM = aggroM;
 		befo_ma_stamina = ma_stamina;
 
 		actionM = mAction(Z, M);
 
-		if (actionM == Action_rest) { //마동석 행동 rest 구현
-			if (ma_stamina != Stm_max);
-				ma_stamina++;
-			if(aggroM!=Aggro_min)
-				aggroM--;
+		//마동석 행동
+		if (actionM == Action_rest) { 
+			ma_stamina = addStm(ma_stamina);
+			aggroM = minus_one_AggroM(aggroM);
 			mRest(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
 		}
 		if (actionM == Action_provoke) {
 			aggroM = Aggro_max;
 			mProvoke(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
 		}
-	
-
-		befoC = C;		//바뀐 값으로 초기화
+		if (actionM == Action_pull) {
+			pull_percent = mPull(percent);
+			if (pull_percent == 1) {
+				aggroM = add_two_AggroM(aggroM);
+				ma_stamina = minusStm(ma_stamina);
+				success_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+			else {
+				aggroM = add_two_AggroM(aggroM);
+				ma_stamina = minusStm(ma_stamina);
+				fail_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+		}
+		//현재 값으로 초기화
+		befoC = C;		
 		befoZ = Z;
 		befoM = M;
 		befo_aggroC = aggroC;
 		befo_aggroM = aggroM;
 		befo_ma_stamina = ma_stamina;
-		turnZ += 1;		//좀비턴 횟수 증가
+		turnZ += 1;	
 	}
-	// 4. 아웃트로
+	//아웃트로
 	outro(C);
-}		//끝
+}
