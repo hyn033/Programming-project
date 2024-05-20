@@ -43,6 +43,7 @@ void intro(void) {
 void outro(int);
 void outro(int C) {
 	if (C == 1) {
+		printf("\n\n");
 		printf("     탈출성공!!\n");
 		printf("  ___        _  _   \n");
 		printf(" / __|      (_)| |  \n");
@@ -52,6 +53,7 @@ void outro(int C) {
 		printf("|____|/_/|_||_||___|\n");
 	}
 	else {
+		printf("\n\n");
 		printf("                탈출실패..\n");
 		printf(",_   __                _____  _       \n");
 		printf("| | / /               |  _  |(_)      \n");
@@ -135,14 +137,18 @@ int cMove(int percent, int C) {
 		return C;
 }
 //좀비 움직이기 함수(+방향) : 좀비위치, 확률, 시민어그로, 마동석어그로
-int zMove(int, int,int,int);
-int zMove(int percent, int Z, int aggroC, int aggroM) {
+int zMove(int, int,int,int, int, int);
+int zMove(int percent, int Z, int aggroC, int aggroM, int C, int M) {
 	int Rd2 = rand() % 100;
 	if (Rd2 < percent) {
-		if (aggroC >= aggroM)
-			return Z -= 1;
-		else
+		if (aggroC >= aggroM) {
+			if (Z != (C + 1))
+				return Z -= 1;
+		}
+		else if (Z != (M + 1))
 			return Z += 1;
+		else
+			return Z;
 	}
 	else
 		return Z;
@@ -320,12 +326,21 @@ int mAction(int Z, int M) {
 void mRest(int, int, int,int,int);
 void mRest(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
 	printf("madongseok rests...\n");
-	if(befo_aggroM==Aggro_min)
-		printf("madongseok: %d (aggro : %d, stamina : %d -> %d)\n", M, aggroM, ma_stamina, befo_ma_stamina);
-	else if(befo_ma_stamina==Stm_max)
+	if(befo_aggroM==aggroM)
+		printf("madongseok: %d (aggro : %d, stamina : %d -> %d)\n", M, aggroM, befo_ma_stamina, ma_stamina);
+	else if(befo_ma_stamina==ma_stamina)
 		printf("madongseok: %d (aggro : %d -> %d, stamina : %d)\n", M, befo_aggroM, aggroM, ma_stamina);
 	else
-		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, ma_stamina, befo_ma_stamina);
+		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, befo_ma_stamina, ma_stamina);
+}
+//마동석이 도발하는 상황 : 마동석 위치, 마동석 어그로. 마동석 체력
+void mProvoke(int,int,int,int,int);
+void mProvoke(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
+	printf("madongseok provoked zombie...\n");
+	if(befo_aggroM==Aggro_max)
+		printf("madongseok: %d (aggro : %d, stamina : %d)\n", M, aggroM, ma_stamina);
+	else
+		printf("madongseok: %d (aggro : %d -> %d, stamina : %d)\n", M, befo_aggroM, aggroM, ma_stamina);
 }
 
 int main() {
@@ -380,9 +395,7 @@ int main() {
 		aggroC = cAggro(C, befoC, aggroC);
 
 		if ((turnZ % 2) != 0) {
-			// 시민, 마동석과 인접해있을 때는 움직이지 X
-			if(Z!=(C+1)||Z!=(M-1))
-				Z = zMove(percent, Z, aggroC, aggroM);
+				Z = zMove(percent, Z, aggroC, aggroM, C, M);
 		}
 
 
@@ -412,12 +425,21 @@ int main() {
 			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM,ma_stamina, befo_ma_stamina); break;
 		}
 
+		befo_aggroM = aggroM;
+		befo_ma_stamina = ma_stamina;
+
 		actionM = mAction(Z, M);
 
 		if (actionM == Action_rest) { //마동석 행동 rest 구현
-			mRest(M, befo_aggroM, aggroM, ma_stamina, befo_ma_stamina);
-			aggroM = befo_aggroM;
-			ma_stamina = befo_ma_stamina;
+			if (ma_stamina != Stm_max);
+				ma_stamina++;
+			if(aggroM!=Aggro_min)
+				aggroM--;
+			mRest(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+		}
+		if (actionM == Action_provoke) {
+			aggroM = Aggro_max;
+			mProvoke(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
 		}
 	
 
