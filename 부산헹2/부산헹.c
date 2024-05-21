@@ -50,7 +50,7 @@ void outro(int C) {
 		printf("| |__  _, __ _ | |_ \n");
 		printf("|  __|| |/ /| || __|\n");
 		printf("| |__  >  < | || |_ \n");
-		printf("|____|/_/|_||_||___|\n");
+		printf("|____|/_/|_||_||___|\n\n\n");
 	}
 	else {
 		printf("\n\n");
@@ -60,7 +60,7 @@ void outro(int C) {
 		printf(" L V /   ___   _   _  | | | | _   ___ \n");
 		printf("  | /   / _ | | | | | | | | || | / _ |\n");
 		printf("  | |  | (_) || |_| | | |/ / | ||  __/\n");
-		printf("  |_/   |___/  |__,_| |___/  |_| |___|\n");
+		printf("  |_/   |___/  |__,_| |___/  |_| |___|\n\n\n");
 	}
 }
 //열차 길이 입력받는 함수
@@ -102,9 +102,9 @@ int maTrue(void){
 			continue;
 	}
 }
-//열차 만드는 함수 : 기차길이, 시민위치, 마동석 위치, 좀비 위치
-void trMake(int, int, int, int);
-void trMake(int tr_length, int C, int Z, int M) {
+//스테이지 1 열차 만드는 함수 : 기차길이, 시민위치, 마동석 위치, 좀비 위치
+void trMakeFirst(int, int, int, int);
+void trMakeFirst(int tr_length, int C, int Z, int M) {
 	printf("\n\n");
 	for (int i = 0; i < tr_length; i++) {
 		printf("#");
@@ -119,6 +119,34 @@ void trMake(int tr_length, int C, int Z, int M) {
 			printf("M");
 		else if (i == Z)
 			printf("Z");
+		else
+			printf(" ");
+	}
+	printf("\n");
+	for (int i = 0; i < tr_length; i++) {
+		printf("#");
+	}
+	printf("\n\n\n");
+}
+//스테이지 2 열차 만드는 함수 : 기차길이, 시민위치, 마동석 위치, 좀비 위치, 빌런위치
+void trMakeSecond(int, int, int, int,int);
+void trMakeSecond(int tr_length, int C, int Z, int M, int V) {
+	printf("\n\n");
+	for (int i = 0; i < tr_length; i++) {
+		printf("#");
+	}
+	printf("\n");
+	for (int i = 0; i < tr_length; i++) {
+		if (i == 0 || i == tr_length - 1)
+			printf("#");
+		else if (i == C)
+			printf("C");
+		else if (i == M)
+			printf("M");
+		else if (i == Z)
+			printf("Z");
+		else if (i == V)
+			printf("V");
 		else
 			printf(" ");
 	}
@@ -145,6 +173,8 @@ int zMove(int percent, int Z, int aggroC, int aggroM, int C, int M) {
 		if (aggroC >= aggroM) {
 			if (Z != (C + 1))
 				return Z -= 1;
+			else
+				return Z;
 		}
 		else if (Z != (M - 1))
 			return Z += 1;
@@ -153,7 +183,14 @@ int zMove(int percent, int Z, int aggroC, int aggroM, int C, int M) {
 	}
 	else
 		return Z;
-	return Z;
+}
+//빌런 움직이기 함수
+int vMove(int, int,int);
+int vMove(int C, int befoC, int V) {
+	if (C == befoC)
+		return V;
+	else
+		return V - 1;
 }
 //시민 이동 현황 출력 함수 : 시민의 현재위치, 시민의 이전위치, 어그로 값
 void cSpot(int, int, int, int);
@@ -171,6 +208,16 @@ void cSpot(int C, int befoC ,int befo_aggroC,int aggroC) {
 			printf("citizen: stay %d (aggro : %d -> %d)\n", befoC, befo_aggroC, aggroC);
 	}
 }
+//빌런 이동 현환 출력 함수
+void vSpot(int, int, int);
+void vSpot(int V, int befoV,int aggroV) {
+	if (befoV != V) {
+		printf("villain: %d -> %d (aggro : %d)\n", befoV, V, aggroV);
+	}
+	else {
+		printf("villain: stay %d (aggro : %d)\n",V, aggroV);
+	}
+}
 //좀비 이동 현황 출력 함수 : 좀비의 현재위치, 좀비의 이전위치, 좀비의 턴 수
 void zSpot(int, int, int);
 void zSpot(int Z, int befoZ, int turnZ) {
@@ -183,6 +230,7 @@ void zSpot(int Z, int befoZ, int turnZ) {
 	else {
 		printf("zombie: stay %d\n", befoZ);
 	}
+	printf("\n");
 }
 //시민 어그로 
 int cAggro(int, int,int);
@@ -209,6 +257,22 @@ int mAggro(int M, int befoM, int aggroM) {
 			aggroM -= 1;
 	}
 	return aggroM;
+}
+//빌런 어그로
+int vAggro(int, int, int);
+int vAggro(int V, int befoV, int aggroV) {
+	if (V != befoV) {
+		if (aggroV != Aggro_max)
+			return aggroV += 1;
+		else
+			return aggroV = Aggro_max;
+	}
+	else {
+		if (aggroV != Aggro_min)
+			return aggroV -= 1;
+		else
+			return aggroV = Aggro_min;
+	}
 }
 //마동석 움직이기 함수
 int mMove(int, int);
@@ -257,6 +321,19 @@ void cCondition(void);
 void cCondition(void) {
 	printf("citizen does nothing.\n");
 }
+//빌런 발암행동
+int vAction(void);
+int vAction(void){
+	int x = rand() % 100;
+	if (x < 30) {
+		printf("- Change trying succes -\n");
+		return 1;
+	}
+	else {
+		printf("- Change trying fail -\n");
+		return 0;
+	}
+}
 //좀비 행동상황 : 시민위치, 마동석위치, 좀비위치, 시민어그로, 마동석어그로
 int zAction(int, int, int, int, int);
 int zAction(int C, int M, int Z, int aggroC, int aggroM) {
@@ -299,7 +376,7 @@ int mAttack(int C, int M, int Z, int aggroC, int aggroM, int ma_stamina, int bef
 		printf("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n", befo_ma_stamina, ma_stamina);
 	return ma_stamina;
 }
-//마동석 행동 : 좀비위치, 마동석위치
+//마동석 행동 상황 : 좀비위치, 마동석위치
 int mAction(int, int);
 int mAction(int Z, int M) {
 	int x;
@@ -407,115 +484,266 @@ void fail_mPull(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_
 	else
 		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, befo_ma_stamina, ma_stamina);
 }
+//스테이지 1
+void stageFirst(void);
+void stageFirst(void) {
+	printf("      _                         _ \n");
+	printf(" ___ | |_   __ _   __ _   ___  / |\n");
+	printf("/ __|| __| / _` | / _` | / _ | | |\n");
+	printf("|__ || |_ | (_| || (_| ||  __/ | |\n");
+	printf("|___/|___| |__,_| |__, | |___| |_|\n");
+	printf("                  |___/           \n\n");
+}
+//스테이지 2
+void stageSecond(void);
+void stageSecond(void) {
+	printf("      _                         ____ \n");
+	printf(" ___ | |_   __ _   __ _   ___  |___ |\n");
+	printf("/ __|| __| / _` | / _` | / _ |  __) |\n");
+	printf("|__ || |_ | (_| || (_| ||  __/ / __/ \n");
+	printf("|___/|___| |__,_| |__, | |___| |_____|\n");
+	printf("                  |___/           \n\n");
+}
+//스테이지 3
+void stageThird(void);
+void stageThird(void) {
+	printf("      _                         _____ \n");
+	printf(" ___ | |_   __ _   __ _   ___  |___ / \n");
+	printf("/ __|| __| / _` | / _` | / _ |   |_ | \n");
+	printf("|__ || |_ | (_| || (_| ||  __/  ___) | \n");
+	printf("|___/|___| |__,_| |__, | |___| |____/ \n");
+	printf("                  |___/           \n\n");
+}
+//스테이지 4
+void stageFourth(void);
+void stageFourth(void) {
+	printf("      _                         _  _   \n");
+	printf(" ___ | |_   __ _   __ _   ___  | || |  \n");
+	printf("/ __|| __| / _` | / _` | / _ | | || |_ \n");
+	printf("|__ || |_ | (_| || (_| ||  __/ |__   _|\n");
+	printf("|___/|___| |__,_| |__, | |___|    |_|  \n");
+	printf("                  |___/           \n\n");
+}
+//스테이지 출력 함수
+void printStage(int);
+void printStage(int stage) {
+	switch (stage) {
+		case 0: stageFirst(); break;
+		case 1: stageSecond(); break;
+		case 2: stageThird(); break;
+		case 3: stageFourth(); break;
+	}
+}
 
 int main() {
 	srand((unsigned int)time(NULL));		//난수 배열을 초기화 하기 위함
 	//인트로
 	intro();
-
+	int stage = 0;
 	//부산헹 초기 설정
 	int tr_length = trTrue();
 	int ma_stamina = maTrue();
 	int percent = perTrue();
 
-	int C, Z, M;	
-	C = tr_length - 6;
-	Z = tr_length - 3;
-	M = tr_length - 2;
+	while (stage != 4) {
+		
+		printStage(stage);
 
-	trMake(tr_length, C, Z, M);
+		int C, Z, M, V;
+		C = tr_length - 6;
+		Z = tr_length - 3;
+		M = tr_length - 2;
+		V = C + 1;
 
-	int befoC, befoZ, befoM, befo_ma_stamina, turnZ;
-	befoC = C;
-	befoZ = Z;
-	befoM = M;
-	befo_ma_stamina = ma_stamina;
-	turnZ = 1;
-
-	int aggroC, befo_aggroC, aggroM, befo_aggroM;
-	aggroC = 0;
-	befo_aggroC = 0;
-	aggroM = 0;
-	befo_aggroM = 0;
-
-	int actionZ, actionM;
-	int Cdead = 0;
-	int pull_percent;
-
-	//무한반복 코드
-	while (C != 1 && Cdead!=1 && ma_stamina!= 0) { 
-		//시민, 좀비 이동
-		C = cMove(percent, C);
-		aggroC = cAggro(C, befoC, aggroC);
-
-		if ((turnZ % 2) != 0) {
-				Z = zMove(percent, Z, aggroC, aggroM, C, M);
+		switch (stage) {
+		case 0: trMakeFirst(tr_length, C, Z, M); break;
+		case 1: trMakeSecond(tr_length, C, Z, M, V); break;
 		}
-		trMake(tr_length, C, Z, M);
 
-		cSpot(C, befoC,befo_aggroC,aggroC);
-		zSpot(Z, befoZ, turnZ); 
-		printf("\n");
-		if (C == 1)
-			break;
-
-		//마동석 이동
-		M = mMove(Z, M);
-		aggroM = mAggro(M, befoM, aggroM);
-
-		trMake(tr_length, C, Z, M);
-
-		mSpot(M, befoM, aggroM, befo_aggroM, ma_stamina);
-
-		//시민상태, 좀비행동
-		cCondition();
-		actionZ = zAction(C, M, Z, aggroC, aggroM);
-
-		switch (actionZ) {
-			case Atk_none: noAttack(); break;
-			case Atk_citizen: Cdead = cAttack(C, M, Z, aggroC, aggroM); break;
-			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM,ma_stamina, befo_ma_stamina); break;
-		}
-		if (ma_stamina == 0 || Cdead == 1)
-			break;
-
-		befo_aggroM = aggroM;
-		befo_ma_stamina = ma_stamina;
-
-		actionM = mAction(Z, M);
-
-		//마동석 행동
-		if (actionM == Action_rest) { 
-			ma_stamina = addStm(ma_stamina);
-			aggroM = minus_one_AggroM(aggroM);
-			mRest(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
-		}
-		if (actionM == Action_provoke) {
-			aggroM = Aggro_max;
-			mProvoke(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
-		}
-		if (actionM == Action_pull) {
-			pull_percent = mPull(percent);
-			if (pull_percent == 1) {
-				aggroM = add_two_AggroM(aggroM);
-				ma_stamina = minusStm(ma_stamina);
-				success_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
-			}
-			else {
-				aggroM = add_two_AggroM(aggroM);
-				ma_stamina = minusStm(ma_stamina);
-				fail_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
-			}
-		}
-		//현재 값으로 초기화
-		befoC = C;		
+		int befoC, befoZ, befoM, befo_ma_stamina, befoV, turnZ;
+		befoC = C;
 		befoZ = Z;
 		befoM = M;
-		befo_aggroC = aggroC;
-		befo_aggroM = aggroM;
+		befoV = V;
 		befo_ma_stamina = ma_stamina;
-		turnZ += 1;	
+		turnZ = 1;
+
+		int aggroC, befo_aggroC, aggroM, aggroV, befo_aggroM;
+		aggroC = 0;
+		befo_aggroC = 0;
+		aggroM = 0;
+		befo_aggroM = 0;
+		aggroV = 0;
+
+		int actionZ, actionM, actionV;
+		int Cdead = 0;
+		int pull_percent;
+
+		//무한반복 코드
+		while (stage == 0) {
+			//시민, 좀비 이동
+			C = cMove(percent, C);
+			aggroC = cAggro(C, befoC, aggroC);
+
+			if ((turnZ % 2) != 0)
+				Z = zMove(percent, Z, aggroC, aggroM, C, M);
+		
+			trMakeFirst(tr_length, C, Z, M);
+
+			cSpot(C, befoC, befo_aggroC, aggroC);
+			zSpot(Z, befoZ, turnZ);
+			if (C == 1)
+				break;
+
+			//마동석 이동
+			M = mMove(Z, M);
+			aggroM = mAggro(M, befoM, aggroM);
+
+			trMakeFirst(tr_length, C, Z, M);
+
+			mSpot(M, befoM, aggroM, befo_aggroM, ma_stamina);
+
+			//시민상태, 좀비행동
+			cCondition();
+			actionZ = zAction(C, M, Z, aggroC, aggroM);
+
+			switch (actionZ) {
+			case Atk_none: noAttack(); break;
+			case Atk_citizen: Cdead = cAttack(C, M, Z, aggroC, aggroM); break;
+			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM, ma_stamina, befo_ma_stamina); break;
+			}
+			if (ma_stamina == 0 || Cdead == 1)
+				break;
+
+			befo_aggroM = aggroM;
+			befo_ma_stamina = ma_stamina;
+
+			actionM = mAction(Z, M);
+
+			//마동석 행동
+			if (actionM == Action_rest) {
+				ma_stamina = addStm(ma_stamina);
+				aggroM = minus_one_AggroM(aggroM);
+				mRest(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+			if (actionM == Action_provoke) {
+				aggroM = Aggro_max;
+				mProvoke(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+			if (actionM == Action_pull) {
+				pull_percent = mPull(percent);
+				if (pull_percent == 1) {
+					aggroM = add_two_AggroM(aggroM);
+					ma_stamina = minusStm(ma_stamina);
+					success_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+				}
+				else {
+					aggroM = add_two_AggroM(aggroM);
+					ma_stamina = minusStm(ma_stamina);
+					fail_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+				}
+			}
+			//현재 값으로 초기화
+			befoC = C;
+			befoZ = Z;
+			befoM = M;
+			befo_aggroC = aggroC;
+			befo_aggroM = aggroM;
+			befo_ma_stamina = ma_stamina;
+			turnZ += 1;
+		}   //스테이지 1
+		while (stage == 1) {
+			//시민, 좀비 이동
+			C = cMove(percent, C);
+			aggroC = cAggro(C, befoC, aggroC);
+
+			V = vMove(C, befoC, V);
+			aggroV = vAggro(V, befoV, aggroV);
+
+			if ((turnZ % 2) != 0)
+				Z = zMove(percent, Z, aggroC, aggroM, C, M);
+
+			trMakeSecond(tr_length, C, Z, M, V);
+
+			cSpot(C, befoC, befo_aggroC, aggroC);
+			vSpot(V, befoV, aggroV);
+			zSpot(Z, befoZ, turnZ);
+			printf("\n");
+			if (C == 1)
+				break;
+
+			//마동석 이동
+			M = mMove(Z, M);
+			aggroM = mAggro(M, befoM, aggroM);
+
+			trMakeSecond(tr_length, C, Z, M, V);
+
+			mSpot(M, befoM, aggroM, befo_aggroM, ma_stamina);
+
+			//시민상태
+			cCondition();
+
+			//빌런 상태
+			actionV = vAction();
+			if (actionV == 1) {
+				int x;
+				x = V;
+				V = C;
+				C = x;
+			}
+			//마동석 행동
+			befo_aggroM = aggroM;
+			befo_ma_stamina = ma_stamina;
+
+			actionM = mAction(Z, M);
+			if (actionM == Action_rest) {
+				ma_stamina = addStm(ma_stamina);
+				aggroM = minus_one_AggroM(aggroM);
+				mRest(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+			if (actionM == Action_provoke) {
+				aggroM = Aggro_max;
+				mProvoke(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+			if (actionM == Action_pull) {
+				pull_percent = mPull(percent);
+				if (pull_percent == 1) {
+					aggroM = add_two_AggroM(aggroM);
+					ma_stamina = minusStm(ma_stamina);
+					success_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+				}
+				else {
+					aggroM = add_two_AggroM(aggroM);
+					ma_stamina = minusStm(ma_stamina);
+					fail_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+				}
+			}
+			//좀비 행동
+			actionZ = zAction(C, M, Z, aggroC, aggroM);
+
+			switch (actionZ) {
+			case Atk_none: noAttack(); break;
+			case Atk_citizen: Cdead = cAttack(C, M, Z, aggroC, aggroM); break;
+			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM, ma_stamina, befo_ma_stamina); break;
+
+			}
+			if (ma_stamina == 0 || Cdead == 1)
+				break;
+
+			//현재 값으로 초기화
+			befoC = C;
+			befoZ = Z;
+			befoM = M;
+			befoV = V;
+			befo_aggroC = aggroC;
+			befo_aggroM = aggroM;
+			befo_ma_stamina = ma_stamina;
+			turnZ += 1;
+		}
+		//아웃트로
+		outro(C);
+		stage++;
+		if (ma_stamina == 0 || Cdead == 1)
+			break;
 	}
-	//아웃트로
-	outro(C);
 }
