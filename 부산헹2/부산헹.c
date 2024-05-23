@@ -20,29 +20,29 @@
 #define Atk_citizen 1	
 #define Atk_dongseok 2
 
+int citizens[Len_max] = { 0 };  //int 형 50개를 저장할 수 있음
+int befo_citizens[Len_max] = { 0 };
+int citizensAggro[Len_max] = { 0 };
+int befo_citizensAggro[Len_max] = { 0 }; 
+int max_citizensAggro[1] = { 0 }; //어그로 중 가장 큰 값
+
 //인트로
 void intro(void);
 void intro(void) {
 	printf(" ______                   _      _         _____               _        \n");
-	Sleep(200);
 	printf("|___  /                  | |    (_)       |_   _|             (_)       \n");
-	Sleep(300);
 	printf("   / /   ___   _ __ ___  | |__   _   ___    | |   _ __   __ _  _  _ ___ \n");
-	Sleep(200);
 	printf("  / /   / _ | | '_ ` _ | | '_ | | | / _ |   | |  | '__| / _` || || '_  |\n");
-	Sleep(300);
 	printf(" / /___| (_) || | | | | || |_) || ||  __/   | |  | |   | (_| || || | | |\n");
-	Sleep(200);
 	printf("|_____/ |___/ |_| |_| |_||_.__/ |_| |___|   |_/  |_|    |__,_||_||_| |_|\n\n");
-	Sleep(300);
 
 	printf("			      TITLE : 부산헹\n\n");
 	printf("			     게임을 시작합니다.\n\n");
 }
 //아웃트로
-void outro(int);
-void outro(int C) {
-	if (C == 1) {
+void outro(int, int);
+void outro(int C, int citizensNum) {
+	if (C == 1 || citizensNum==0) {
 		printf("\n\n");
 		printf("     탈출성공!!\n");
 		printf("  ___        _  _   \n");
@@ -147,6 +147,35 @@ void trMakeSecond(int tr_length, int C, int Z, int M, int V) {
 			printf("Z");
 		else if (i == V)
 			printf("V");
+		else
+			printf(" ");
+	}
+	printf("\n");
+	for (int i = 0; i < tr_length; i++) {
+		printf("#");
+	}
+	printf("\n\n\n");
+}
+//스테이지 3 열차 만드는 함수
+void trMakeThird(int, int, int);
+void trMakeThird(int tr_length, int Z, int M) {
+	int index = 0;
+	printf("\n\n");
+	for (int i = 0; i < tr_length; i++) {
+		printf("#");
+	}
+	printf("\n");
+	for (int i = 0; i < tr_length; i++) {
+		if (i == 0 || i == tr_length - 1)
+			printf("#");
+		else if (i == M)
+			printf("M");
+		else if (i == Z)
+			printf("Z");
+		else if (i == citizens[index]) {
+			printf("C");
+			index++;
+		}
 		else
 			printf(" ");
 	}
@@ -471,7 +500,7 @@ void success_mPull(int, int, int, int, int);
 void success_mPull(int M, int aggroM, int befo_aggroM, int ma_stamina, int befo_ma_stamina) {
 	printf("madongseok pulled zombie... Next turn, it can't move\n");
 	if (befo_aggroM == aggroM)
-		printf("madongseok: %d (aggro : %d, stamina : %d)\n", M, aggroM, ma_stamina);
+		printf("madongseok: %d (aggro : %d, stamina : %d -> %d)\n", M, aggroM, befo_ma_stamina, ma_stamina);
 	else
 		printf("madongseok: %d (aggro : %d -> %d, stamina : %d -> %d)\n", M, befo_aggroM, aggroM, befo_ma_stamina,ma_stamina);
 }
@@ -534,12 +563,207 @@ void printStage(int stage) {
 		case 3: stageFourth(); break;
 	}
 }
+//기차길이에 따른 시민들 수
+int citizensNumMake(int, int);
+int citizensNumMake(int citizens_num_min, int citizens_num_max) {
+	int citizensNum = rand() % (citizens_num_max - citizens_num_min ) + citizens_num_min;
+	return citizensNum;
+}
+//기차길이에 따른 시민들 위치
+void citizensSpotMake(int, int);
+void citizensSpotMake(int C, int citizensNum) {
+	for (int i = 0; i < citizensNum; i++) {
+		citizens[i] = rand() % (C - 2) + 2;
+		for (int j = 0; j < i; j++) {
+			if (citizens[i] == citizens[j]) {
+				citizens[i] = rand() % (C - 2) + 2;
+			}
+		}
+	}
+}
+//시민들 위치 정렬
+void spotSort(int citizensNum);
+void spotSort(int citizensNum) {
+	for (int i = 0; i < citizensNum-1; i++) {
+		for (int j = 0; j < citizensNum - 1 - i; j++) {
+			if (citizens[j] > citizens[j + 1]) {
+				int save = citizens[j];
+				citizens[j] = citizens[j + 1];
+				citizens[j + 1] = save;
+			}
+		}
+	}
+}
+//시민들이 움직이는 상황
+void citizensMove(int, int);
+void citizensMove(int percent, int citizensNum) {
+	int Rd;
+	for (int i = 0; i < citizensNum; i++) {
+		if (i == 0) {
+			Rd = rand() % 100;
+			if (Rd < (100 - percent)) {
+				citizens[i] -= 1;
+			}
+		}
+		if (citizens[i+1] != 0) {
+			Rd = rand() % 100;
+			if (Rd < (100 - percent)) {
+				citizens[i+1] -= 1;
+				if (citizens[i+1] == citizens[i])
+					citizens[i+1] += 1;
+			}
+		}
+	}
+}
+//시민들 상황
+void citizensCondition(int);
+void citizensCondition(int citizensNum) {
+	int count = 0;
+	for (int i = 0; i < citizensNum; i++) {
+		if (citizens[i] != 0)
+			count++;
+	}
+	printf("%d citizen(s) alive(s).\n", count);
+}
+//시민들 현재위치
+void citizensSpot(int);
+void citizensSpot(int citizenNum) {
+	for (int i = 0; i < citizenNum; i++) {
+		if (citizens[i] == befo_citizens[i]) {
+			if(citizensAggro[i] == befo_citizensAggro[i])
+				printf("citizen%d : stay %d ( aggro : %d )\n", i, citizens[i], citizensAggro[i]);
+			else
+				printf("citizen%d : stay %d ( aggro : %d -> %d )\n", i, citizens[i], befo_citizensAggro[i], citizensAggro[i]);
+		}
+		else {
+			if (citizensAggro[i] == befo_citizensAggro[i])
+				printf("citizen%d : %d -> %d ( aggro : %d )\n", i, befo_citizens[i], citizens[i], citizensAggro[i]);
+			else
+				printf("citizen%d : %d -> %d ( aggro : %d -> %d)\n", i, befo_citizens[i], citizens[i], befo_citizensAggro[i], citizensAggro[i]);
+		}
+	}
+}
+//시민들 이전값 저장하기
+void befo_citizensMake(int);
+void befo_citizensMake(int citizensNum) {
+	for (int i = 0; i < citizensNum; i++) {
+		befo_citizens[i] = citizens[i];
+	}
+}
+//시민들 이전값 저장하기
+void befo_citizensAggroMake(int);
+void befo_citizensAggroMake(int citizensNum) {
+	for (int i = 0; i < citizensNum; i++) {
+		befo_citizensAggro[i] = citizensAggro[i];
+	}
+}
+//탈출한 시민
+int exit_citizens(int);
+int exit_citizens(int citizensNum) {
+	int count = 0;
+	if (citizens[0] == 1) {
+		count++;
+		for (int i = 0; i < citizensNum; i++) {
+			citizens[i] = citizens[i+1];
+		}
+	}
+	if(count !=0)
+		printf("exit citizen(s) : %d  /", count);
+	citizensNum -= count;
+	return citizensNum;
+}
+//좀비 공격에 의해 죽은 시민
+int die_citizens(int);
+int die_citizens(int citizensNum) {
+	if (citizens[0] != 0) {
+		int count = 0;
+		if (citizens[citizensNum - 1] == 0)
+			count++;
+		citizensNum -= count;
+	}
+	return citizensNum;
+}
+//시민들 어그로
+void Aggro_citizens(int);
+void Aggro_citizens(int citizensNum){
+	for (int i = 0; i < citizensNum; i++) {
+		if (befo_citizens[i] != citizens[i]) {
+			if (citizensAggro[i] != Aggro_max)
+				citizensAggro[i] += 1;
+			else
+				citizensAggro[i] = Aggro_max;
+		}
+		else {
+			if (citizensAggro[i] != Aggro_min)
+				citizensAggro[i] -= 1;
+			else
+				citizensAggro[i] = Aggro_min;
+		}
+	}
+}
+//좀비 시민들 공격 상황
+void citizensAttack(int, int, int, int);
+void citizensAttack(int Z, int M, int citizensNum, int aggroM) {
+	citizens[citizensNum - 1] = 0;
+	if (Z == (citizens[citizensNum - 1] + 1) && Z == (M - 1))
+		printf("citizen%d has been attacked by zombie. ( aggro : %d vs. %d )\n", citizensNum - 1, citizensAggro[citizensNum - 1], aggroM);
+	else
+		printf("citizen%d has been attacked by zombie.\n", citizensNum - 1);
+}
+//스테이지3 좀비 행동상황 :마동석위치, 좀비위치, 마동석 어그로
+int zAction2(int, int, int, int);
+int zAction2(int M, int Z, int aggroM, int citizensNum) {
+	int x;
+	if (Z == citizens[citizensNum-1] && Z == (M - 1)) {
+		if (citizensAggro[citizensNum-1] > aggroM)
+			x = Atk_citizen;
+		else
+			x = Atk_dongseok;
+	}
+	else if (Z == citizens[citizensNum - 1])
+		x = Atk_citizen;
+	else if (Z == (M - 1))
+		x = Atk_dongseok;
+	else
+		x = Atk_none;
+	return x;
+}
+//시민들 어그로 중 최대값
+void citizensAggroMax(void);
+void citizensAggroMax(void) {
+	for (int i = 0; i < Len_max; i++) {
+		max_citizensAggro[1] = citizensAggro[i];
+		if(citizensAggro[i]<citizensAggro[i+1])
+			max_citizensAggro[1] = citizensAggro[i+1];
+	}
+}
+//스테이지3 좀비 이동
+int zMove2(int, int, int, int, int);
+int zMove2(int Z, int M, int percent, int aggroM, int citizensNum) {
+	citizensAggroMax();
+	int Rd2 = rand() % 100;
+	if (Rd2 < percent) {
+		if (max_citizensAggro[1]>=aggroM) {
+			if (Z != (citizens[citizensNum-1] + 1))
+				return Z -= 1;
+			else
+				return Z;
+		}
+		else if (Z != (M - 1))
+			return Z += 1;
+		else
+			return Z;
+	}
+	else
+		return Z;
+}
 
 int main() {
 	srand((unsigned int)time(NULL));		//난수 배열을 초기화 하기 위함
 	//인트로
 	intro();
 	int stage = 0;
+
 	//부산헹 초기 설정
 	int tr_length = trTrue();
 	int ma_stamina = maTrue();
@@ -554,11 +778,6 @@ int main() {
 		Z = tr_length - 3;
 		M = tr_length - 2;
 		V = C + 1;
-
-		switch (stage) {
-		case 0: trMakeFirst(tr_length, C, Z, M); break;
-		case 1: trMakeSecond(tr_length, C, Z, M, V); break;
-		}
 
 		int befoC, befoZ, befoM, befo_ma_stamina, befoV, turnZ;
 		befoC = C;
@@ -579,22 +798,36 @@ int main() {
 		int Cdead = 0;
 		int pull_percent;
 
+		//스테이지3 설정
+		int citizens_num_max = tr_length / 2;
+		int citizens_num_min = tr_length / 4;
+		int citizensNum = citizensNumMake(citizens_num_min, citizens_num_max);  //총 시민들 수
+
+		citizensSpotMake(C, citizensNum); //초기 위치
+		citizens[citizensNum - 1] = C; // 배열 마지막 자리에 기존 C 넣기
+		spotSort(citizensNum); // 정렬
+		befo_citizensMake(citizensNum); //이전 시민들 위치 저장 배열
+
+		switch (stage) {
+		case 0: trMakeFirst(tr_length, C, Z, M); break;
+		case 1: trMakeSecond(tr_length, C, Z, M, V); break;
+		case 2: trMakeThird(tr_length, Z, M); break;
+		}
+		printf("=========================================================\n\n\n");
+
 		//무한반복 코드
 		while (stage == 0) {
 			//시민, 좀비 이동
 			C = cMove(percent, C);
 			aggroC = cAggro(C, befoC, aggroC);
-
 			if ((turnZ % 2) != 0)
 				Z = zMove(percent, Z, aggroC, aggroM, C, M);
-		
+
 			trMakeFirst(tr_length, C, Z, M);
 
 			cSpot(C, befoC, befo_aggroC, aggroC);
 			zSpot(Z, befoZ, turnZ);
-			if (C == 1)
-				break;
-
+			
 			//마동석 이동
 			M = mMove(Z, M);
 			aggroM = mAggro(M, befoM, aggroM);
@@ -606,12 +839,14 @@ int main() {
 			//시민상태, 좀비행동
 			cCondition();
 			actionZ = zAction(C, M, Z, aggroC, aggroM);
-
 			switch (actionZ) {
 			case Atk_none: noAttack(); break;
 			case Atk_citizen: Cdead = cAttack(C, M, Z, aggroC, aggroM); break;
 			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM, ma_stamina, befo_ma_stamina); break;
 			}
+
+			if (C == 1)
+				break;
 			if (ma_stamina == 0 || Cdead == 1)
 				break;
 
@@ -643,6 +878,7 @@ int main() {
 					fail_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
 				}
 			}
+
 			//현재 값으로 초기화
 			befoC = C;
 			befoZ = Z;
@@ -669,20 +905,19 @@ int main() {
 			vSpot(V, befoV, aggroV);
 			zSpot(Z, befoZ, turnZ);
 			printf("\n");
-			if (C == 1)
-				break;
 
 			//마동석 이동
 			M = mMove(Z, M);
 			aggroM = mAggro(M, befoM, aggroM);
 
 			trMakeSecond(tr_length, C, Z, M, V);
-
 			mSpot(M, befoM, aggroM, befo_aggroM, ma_stamina);
 
 			//시민상태
 			cCondition();
-
+			if (C == 1) {
+				break;
+			}
 			//빌런 상태
 			actionV = vAction();
 			if (actionV == 1) {
@@ -691,9 +926,8 @@ int main() {
 				V = C;
 				C = x;
 			}
+
 			//마동석 행동
-			befo_aggroM = aggroM;
-			befo_ma_stamina = ma_stamina;
 
 			actionM = mAction(Z, M);
 			if (actionM == Action_rest) {
@@ -718,6 +952,9 @@ int main() {
 					fail_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
 				}
 			}
+			befo_aggroM = aggroM;
+			befo_ma_stamina = ma_stamina;
+
 			//좀비 행동
 			actionZ = zAction(C, M, Z, aggroC, aggroM);
 
@@ -740,9 +977,85 @@ int main() {
 			befo_ma_stamina = ma_stamina;
 			turnZ += 1;
 		}
+		while (stage == 2) {
+			//시민들 움직임
+			citizensMove(percent, citizensNum);
+			Aggro_citizens(citizensNum);
+			if ((turnZ % 2) != 0)
+				Z = zMove2(Z, M, percent, aggroM, citizensNum);
+
+			trMakeThird(tr_length, Z, M);
+
+			//자리 출력
+			citizensSpot(citizensNum);
+			zSpot(Z, befoZ, turnZ);
+			trMakeThird(tr_length, Z, M);
+
+			//마동석 이동
+			M = mMove(Z, M);
+			aggroM = mAggro(M, befoM, aggroM);
+			trMakeThird(tr_length, Z, M);
+			mSpot(M, befoM, aggroM, befo_aggroM, ma_stamina);
+
+			//시민상태, 좀비행동
+			actionZ = zAction2(M, Z, aggroM, citizensNum);
+			switch (actionZ) {
+			case Atk_none: noAttack(); break;
+			case Atk_citizen: citizensAttack(Z, M, citizensNum, aggroM); break;
+			case Atk_dongseok: ma_stamina = mAttack(C, M, Z, aggroC, aggroM, ma_stamina, befo_ma_stamina); break;
+			}
+
+			//시민 배열 업데이트 후 상태 출력
+			citizensNum = exit_citizens(citizensNum);
+			citizensNum=die_citizens(citizensNum);
+			citizensCondition(citizensNum);
+
+			if (ma_stamina == 0 || citizensNum ==0)
+				break;
+
+			befo_aggroM = aggroM;
+			befo_ma_stamina = ma_stamina;
+
+			//마동석 행동
+			actionM = mAction(Z, M);
+			if (actionM == Action_rest) {
+				ma_stamina = addStm(ma_stamina);
+				aggroM = minus_one_AggroM(aggroM);
+				mRest(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+			if (actionM == Action_provoke) {
+				aggroM = Aggro_max;
+				mProvoke(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+			}
+			if (actionM == Action_pull) {
+				pull_percent = mPull(percent);
+				if (pull_percent == 1) {
+					aggroM = add_two_AggroM(aggroM);
+					ma_stamina = minusStm(ma_stamina);
+					success_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+				}
+				else {
+					aggroM = add_two_AggroM(aggroM);
+					ma_stamina = minusStm(ma_stamina);
+					fail_mPull(M, aggroM, befo_aggroM, ma_stamina, befo_ma_stamina);
+				}
+			}
+
+			//현재 값으로 초기화
+			befoC = C;
+			befoZ = Z;
+			befoM = M;
+			befo_aggroC = aggroC;
+			befo_aggroM = aggroM;
+			befo_ma_stamina = ma_stamina;
+			turnZ += 1;
+			befo_citizensMake(citizensNum);
+			befo_citizensAggroMake(citizensNum);
+			}
 		//아웃트로
-		outro(C);
+		outro(C, citizensNum);
 		stage++;
+
 		if (ma_stamina == 0 || Cdead == 1)
 			break;
 	}
