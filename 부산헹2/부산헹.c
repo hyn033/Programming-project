@@ -841,7 +841,7 @@ void strong_zMove4(int M, int percent, int aggroM, int citizensNum) {
 				if (zombies[i] != (citizens[citizensNum - 1] + 1) && zombies[i] != zombies[i + 1] + 1)
 					zombies[i] -= 1;
 			}
-			else if (zombies[i] != (zombies[0] - 1) && zombies[i] !=zombies[i-1]+1)
+			else if (zombies[i] != (zombies[0] - 1) && zombies[i] !=zombies[i-1]-1)
 				zombies[i] += 1;
 		}
 	}
@@ -914,7 +914,7 @@ int zAction4(int M, int aggroM, int citizensNum, int countZ) {
 	}
 	else if (zombies[countZ-1] == citizens[citizensNum - 1] + 1)
 		x = Atk_citizen;
-	else if (zombies[countZ - 1] == (M - 1))
+	else if (zombies[0] == (M - 1))
 		x = Atk_dongseok;
 	else
 		x = Atk_none;
@@ -1152,7 +1152,6 @@ int main() {
 					C = x;
 				}
 			}
-
 			//마동석 행동
 			actionM = mAction(Z, M);
 			if (actionM == Action_rest) {
@@ -1231,8 +1230,8 @@ int main() {
 			}
 
 			//시민 배열 업데이트 후 상태 출력
-			citizensNum = exit_citizens(citizensNum);
 			dieCitizens = die_citizens(citizensNum);
+			citizensNum = exit_citizens(citizensNum);
 			saveDieCitizens += dieCitizens;
 			if (dieCitizens != 0);
 				citizensNum -= dieCitizens;
@@ -1312,8 +1311,8 @@ int main() {
 
 			//시민 배열 업데이트 후 상태 출력
 			countZ = countZombie();
-			citizensNum = exit_citizens(citizensNum);
 			dieCitizens = die_citizens(citizensNum);
+			citizensNum = exit_citizens(citizensNum);
 			saveDieCitizens += dieCitizens;
 			if (dieCitizens != 0);
 				citizensNum -= dieCitizens;
@@ -1361,7 +1360,15 @@ int main() {
 			countZ = countZombie(citizensNum);
 		}
 		//시민 탈출시
-		if (stage<3) {
+		if (stage==0 || stage==1) {
+			if (C == 1) {
+				nextStage();
+				stage++;
+			}
+			else
+				break;
+		}
+		else if (stage==2) {
 			if (C == 1 || save_citizens!=saveDieCitizens) {
 				nextStage();
 				stage++;
