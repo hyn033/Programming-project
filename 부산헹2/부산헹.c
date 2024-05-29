@@ -876,9 +876,9 @@ void zSpot2(int turnZ) {
 		printf("zombie: stay %d\n", zombies[0]);
 	for (int i = 1; zombies[i] != 0; i++) {
 		if (zombies[i] == befo_zombies[i])
-			printf("zombie: stay %d\n", zombies[i]);
+			printf("strong zombie: stay %d\n", zombies[i]);
 		else
-			printf("zombie: %d -> %d\n", befo_zombies[i], zombies[i]);
+			printf("strong zombie: %d -> %d\n", befo_zombies[i], zombies[i]);
 	}
 	printf("\n");
 }
@@ -952,6 +952,13 @@ int mMove2(int M) {
 		}
 	}
 }
+//배열 초기화 하는 함수
+void rePut(void);
+void rePut(void) {
+	for (int i = 0; i < Len_max; i++) {
+		citizens[i] = 0;
+	}
+}
 
 int main() {
 	srand((unsigned int)time(NULL));		//난수 배열을 초기화 하기 위함
@@ -1015,6 +1022,7 @@ int main() {
 
 		if (stage == 3) {
 			zombies[0] = Z;
+			rePut();
 			citizensNum = citizensNumMake(citizens_num_min, citizens_num_max);  //총 시민들 수
 			countZ = countZombie(citizensNum);
 			citizensSpotMake(C, citizensNum); //초기 위치
@@ -1151,7 +1159,7 @@ int main() {
 					V = C;
 					C = x;
 				}
-			}
+			}	
 			//마동석 행동
 			actionM = mAction(Z, M);
 			if (actionM == Action_rest) {
