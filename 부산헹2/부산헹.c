@@ -241,11 +241,13 @@ int cMove(int percent, int C) {
 		return C;
 }
 //좀비 움직이기 함수(+방향) : 좀비위치, 확률, 시민어그로, 마동석어그로
-int zMove(int, int,int,int, int, int);
-int zMove(int percent, int Z, int aggroC, int aggroM, int C, int M) {
+int zMove(int, int,int,int, int, int, int);
+int zMove(int percent, int Z, int aggroC, int aggroM, int C, int M, int pull_percent) {
 	int Rd2 = rand() % 100;
 	if (Rd2 < percent) {
-		if (aggroC >= aggroM) {
+		if (pull_percent == 1)
+			return Z;
+		else if (aggroC >= aggroM) {
 			if (Z != (C + 1))
 				return Z -= 1;
 			else
@@ -294,9 +296,11 @@ void vSpot(int V, int befoV,int aggroV) {
 	}
 }
 //좀비 이동 현황 출력 함수 : 좀비의 현재위치, 좀비의 이전위치, 좀비의 턴 수
-void zSpot(int, int, int);
-void zSpot(int Z, int befoZ, int turnZ) {
-	if (turnZ % 2 == 0) {
+void zSpot(int, int, int, int);
+void zSpot(int Z, int befoZ, int turnZ, int pull_percent) {
+	if (pull_percent == 1)
+		printf("zombie can't move by madongseok\n");
+	else if (turnZ % 2 == 0) {
 		printf("zombie: stay %d (cannot move)\n", befoZ);
 	}
 	else if (befoZ != Z) {
@@ -788,12 +792,14 @@ void citizensAggroMax(void) {
 	}
 }
 //스테이지3 좀비 이동
-int zMove3(int, int, int, int, int);
-int zMove3(int Z, int M, int percent, int aggroM, int citizensNum) {
+int zMove3(int, int, int, int, int,int);
+int zMove3(int Z, int M, int percent, int aggroM, int citizensNum, int pull_percent) {
 	citizensAggroMax();
 	int Rd2 = rand() % 100;
 	if (Rd2 < percent) {
-		if (max_citizensAggro[1]>=aggroM) {
+		if (pull_percent == 1)
+			return Z;
+		else if (max_citizensAggro[1]>=aggroM) {
 			if (Z != (citizens[citizensNum-1] + 1))
 				return Z -= 1;
 			else
@@ -815,12 +821,14 @@ void citizensNums(int citizensNum) {
 	}
 }
 //스테이지4 좀비 이동
-void zMove4(int, int, int, int);
-void zMove4(int M, int percent, int aggroM, int citizensNum) {
+void zMove4(int, int, int, int,int);
+void zMove4(int M, int percent, int aggroM, int citizensNum,int pull_percent) {
 	citizensAggroMax();
 	int Rd2 = rand() % 100;
 	if (Rd2 < percent) {
-		if (max_citizensAggro[1] >= aggroM) {
+		if (pull_percent == 1)
+			zombies[0];
+		else if (max_citizensAggro[1] >= aggroM) {
 			if (zombies[0] != (citizens[citizensNum - 1] + 1) && zombies[0] != zombies[1]+1)
 				zombies[0] -= 1;
 		}
@@ -866,9 +874,11 @@ void citizensAttack2(int M, int citizensNum, int aggroM, int countZ) {
 	citizens[citizensNum - 1] = 0;
 }
 //스테이지4 좀비 이동 현황 출력 함수 : 좀비의 현재위치, 좀비의 이전위치, 좀비의 턴 수
-void zSpot2(int);
-void zSpot2(int turnZ) {
-	if (turnZ % 2 == 0)
+void zSpot2(int,int);
+void zSpot2(int turnZ,int pull_percent) {
+	if (pull_percent == 1)
+		printf("zombie can't move by madongseok\n");
+	else if (turnZ % 2 == 0)
 		printf("zombie: stay %d (cannot move)\n", zombies[0]);
 	else if (befo_zombies[0]!=zombies[0])
 		printf("zombie: %d -> %d\n", befo_zombies[0] , zombies[0]);
@@ -1016,7 +1026,7 @@ int main() {
 
 		int actionZ, actionM, actionV;
 		int Cdead = 0;
-		int pull_percent;
+		int pull_percent=0;
 		int countZ=1;
 
 
@@ -1024,7 +1034,7 @@ int main() {
 			zombies[0] = Z;
 			rePut();
 			citizensNum = citizensNumMake(citizens_num_min, citizens_num_max);  //총 시민들 수
-			countZ = countZombie(citizensNum);
+			countZ = countZombie();
 			citizensSpotMake(C, citizensNum); //초기 위치
 			citizens[citizensNum - 1] = C; // 배열 마지막 자리에 기존 C 넣기
 			spotSort(citizensNum); // 정렬
@@ -1050,13 +1060,14 @@ int main() {
 			C = cMove(percent, C);
 			aggroC = cAggro(C, befoC, aggroC);
 			if ((turnZ % 2) != 0)
-				Z = zMove(percent, Z, aggroC, aggroM, C, M);
-
+				Z = zMove(percent, Z, aggroC, aggroM, C, M,pull_percent);
+			
 			trMakeFirst(tr_length, C, Z, M);
 
 			cSpot(C, befoC, befo_aggroC, aggroC);
-			zSpot(Z, befoZ, turnZ);
-			
+			zSpot(Z, befoZ, turnZ, pull_percent);
+			pull_percent = 0;
+
 			//마동석 이동
 			M = mMove(Z, M);
 			aggroM = mAggro(M, befoM, aggroM);
@@ -1081,10 +1092,8 @@ int main() {
 
 			befo_aggroM = aggroM;
 			befo_ma_stamina = ma_stamina;
-
-			actionM = mAction(Z, M);
-
 			//마동석 행동
+			actionM = mAction(Z, M);
 			if (actionM == Action_rest) {
 				ma_stamina = addStm(ma_stamina);
 				aggroM = minus_one_AggroM(aggroM);
@@ -1128,15 +1137,15 @@ int main() {
 			}
 
 			if ((turnZ % 2) != 0)
-				Z = zMove(percent, Z, aggroC, aggroM, C, M);
+				Z = zMove(percent, Z, aggroC, aggroM, C, M, pull_percent);
 
 			trMakeSecond(tr_length, C, Z, M, V);
 
 			cSpot(C, befoC, befo_aggroC, aggroC);
 			if(V!=0)
 				vSpot(V, befoV, aggroV);
-			zSpot(Z, befoZ, turnZ);
-			printf("\n");
+			zSpot(Z, befoZ, turnZ, pull_percent);
+			pull_percent = 0;
 
 			//마동석 이동
 			M = mMove(Z, M);
@@ -1214,14 +1223,15 @@ int main() {
 			citizensMove(percent, citizensNum);
 			Aggro_citizens(citizensNum);
 			if ((turnZ % 2) != 0)
-				Z = zMove3(Z, M, percent, aggroM, citizensNum);
+				Z = zMove3(Z, M, percent, aggroM, citizensNum, pull_percent);
 
 			trMakeThird(tr_length, Z, M);
 
 			//자리 출력
 			citizensSpot(citizensNum);
-			zSpot(Z, befoZ, turnZ);
+			zSpot(Z, befoZ, turnZ, pull_percent);
 			trMakeThird(tr_length, Z, M);
+			pull_percent = 0;
 
 			//마동석 이동
 			M = mMove(Z, M);
@@ -1291,17 +1301,17 @@ int main() {
 			citizensMove(percent, citizensNum);
 			Aggro_citizens(citizensNum);
 
-			
 			if((turnZ % 2) != 0)
-				zMove4(M, percent, aggroM, citizensNum);
+				zMove4(M, percent, aggroM, citizensNum,pull_percent);
 			strong_zMove4(M, percent, aggroM, citizensNum);
 
 			trMakeFourth(tr_length, M, countZ);
 
 			//자리 출력
 			citizensSpot(citizensNum);
-			zSpot2(turnZ);
+			zSpot2(turnZ,pull_percent);
 			trMakeFourth(tr_length, M, countZ);
+			pull_percent = 0;
 
 			//마동석 이동
 			M = mMove2(M);
@@ -1365,8 +1375,9 @@ int main() {
 			befo_citizensMake(citizensNum);
 			befo_citizensAggroMake(citizensNum);
 			befo_zombiesMake(countZ);
-			countZ = countZombie(citizensNum);
+			countZ = countZombie();
 		}
+
 		//시민 탈출시
 		if (stage==0 || stage==1) {
 			if (C == 1) {
